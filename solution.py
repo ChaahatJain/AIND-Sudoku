@@ -1,5 +1,6 @@
 assignments = []
-
+rows = 'ABCDEFGHI'
+cols = '123456789'
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
@@ -29,8 +30,15 @@ def naked_twins(values):
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
-    pass
+    return [a+b for a in A for b in B]
+rowUnits          = [cross(r,cols) for r in rows]
+colUnits          = [cross(rows,c) for c in cols]
+squareUnit        = [cross(rs,cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
+diagonalUnit      = [m+n for m,n in zip(rows,cols)]
+otherDiagonalUnit = [m+n for m,n in zip(rows,reversed(cols))]
+boxes = cross(rows,cols)
 
+unitsList = rowUnits + colUnits + squareUnit + diagonalUnit + otherDiagonalUnit
 def grid_values(grid):
     """
     Convert grid into a dict of {square: char} with '123456789' for empties.
@@ -41,7 +49,15 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-    pass
+    chars = []
+    digits = '123456789'
+    for c in grid:
+        if c in digits:
+            chars.append(c)
+        if c == '.':
+            chars.append(digits)
+    assert len(chars) == 81
+    return dict(zip(boxes, chars))
 
 def display(values):
     """
