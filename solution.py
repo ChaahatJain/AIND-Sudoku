@@ -28,17 +28,34 @@ def naked_twins(values):
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
 
+    twins      = len([box for box in values.keys() if len(values[box]) == 2])
+    nakedtwins = [[box1, box2] for box1 in twins \
+                  for box2 in peers[box1] \
+                  if set(values[box1]) == set(values[box2])]
+    for i in range(len(naked_twins)):
+        box1 = naked_twins[i][0]
+        box2 = naked_twins[i][1]
+        peers1 = set(peers[box1])
+        peers2 = set(peers[box2])
+        peersBoth = peers1 & peers2
+        digit = values[box1]
+    for peer in peersBoth:
+        values[peer] = values[peer].replace(digit, '')
+        return values
 def cross(A, B):
     "Cross product of elements in A and elements in B."
     return [a+b for a in A for b in B]
 rowUnits          = [cross(r,cols) for r in rows]
 colUnits          = [cross(rows,c) for c in cols]
-squareUnit        = [cross(rs,cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-diagonalUnit      = [m+n for m,n in zip(rows,cols)]
-otherDiagonalUnit = [m+n for m,n in zip(rows,reversed(cols))]
+squareUnit        = [cross(rs,cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
+diagonalUnit      = [m+n for m,n in zip(rows, cols)]
+otherDiagonalUnit = [m+n for m,n in zip(rows, reversed(cols))]
 boxes = cross(rows,cols)
 
 unitsList = rowUnits + colUnits + squareUnit + diagonalUnit + otherDiagonalUnit
+
+units = dict((s, [u for u in unitsList if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s],[])) - set([s])) for s in boxes)
 def grid_values(grid):
     """
     Convert grid into a dict of {square: char} with '123456789' for empties.
@@ -65,19 +82,58 @@ def display(values):
     Args:
         values(dict): The sudoku in dictionary form
     """
-    pass
+    width = 1 + max(len(values[s]) for s in boxes)
+    line = '+'.join(['-' * (width * 3)] * 3)
+    for r in rows:
+        print(''.join(values[r + c].center(width) + ('|' if c in '36' else '')
+                      for c in cols))
+        if r in 'CF': print(line)
+    return
 
 def eliminate(values):
-    pass
+    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    for box in solved_values:
+        digit = values[box]
+        for peer in peers[box]:
+            values[peer] = values[peer].replace(digit,'')
+    return values
 
 def only_choice(values):
-    pass
+    for unit in unitsList:
+        for digit in '123456789':
+            dplaces = [box for box in unit if digit in values[box]]
+            if len(dplaces) == 1:
+                values[dplaces[0]] = digit
+    return values
 
 def reduce_puzzle(values):
-    pass
+    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    stalled = False
+    while not stalled:
+        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
+        values = eliminate(values)
+        values = only_choice(values)
+        solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
+        stalled = solved_values_before == solved_values_after
+        if len([box for box in values.keys() if len(values[box]) == 0]):
+            return False
+    return values
 
 def search(values):
-    pass
+    values = reduce_puzzle(values)
+    if values is False:
+        return False
+    if all(len(values[s]) == 1 for s in boxes):
+        return values
+    # Choose one of the unfilled squares with the fewest possibilities
+    n, s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+    # Now use recursion to solve each one of the resulting sudokus, and if one returns a value (not False), return that answer!
+    for value in values[s]:
+        new_sudoku = values.copy()
+        new_sudoku[s] = value
+        attempt = search(new_sudoku)
+        if attempt:
+            return attempt
 
 def solve(grid):
     """
@@ -88,6 +144,8 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+    values = search(grid_values(grid))
+    return values
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
