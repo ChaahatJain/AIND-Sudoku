@@ -1,6 +1,4 @@
-assignments = []
-rows = 'ABCDEFGHI'
-cols = '123456789'
+
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
@@ -8,8 +6,6 @@ def assign_value(values, box, value):
     """
 
     # Don't waste memory appending actions that don't actually change any values
-    if values[box] == value:
-        return values
 
     values[box] = value
     if len(value) == 1:
@@ -42,20 +38,28 @@ def naked_twins(values):
     for peer in peersBoth:
         values[peer] = values[peer].replace(digit, '')
         return values
-def cross(A, B):
+assignments = []
+def cross(a, b):
     "Cross product of elements in A and elements in B."
-    return [a+b for a in A for b in B]
-rowUnits          = [cross(r,cols) for r in rows]
-colUnits          = [cross(rows,c) for c in cols]
-squareUnit        = [cross(rs,cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-diagonalUnit      = [m+n for m,n in zip(rows, cols)]
-otherDiagonalUnit = [m+n for m,n in zip(rows, reversed(cols))]
-boxes = cross(rows,cols)
+    return [s+t for s in a for t in b]
 
-unitsList = rowUnits + colUnits + squareUnit + diagonalUnit + otherDiagonalUnit
+rows = 'ABCDEFGHI'
+cols = '123456789'
+cols_rev = list(reversed(cols))
+boxes = cross(rows, cols)
 
-units = dict((s, [u for u in unitsList if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s],[])) - set([s])) for s in boxes)
+row_units = [cross(r, cols) for r in rows]
+column_units = [cross(rows, c) for c in cols]
+square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
+d1_units = [[rows[i]+cols[i] for i in range(len(rows))]]
+d2_units = [[rows[i]+cols_rev[i] for i in range(len(rows))]]
+
+
+unitlist = row_units + column_units + square_units + d1_units + d2_units
+
+
+units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 def grid_values(grid):
     """
     Convert grid into a dict of {square: char} with '123456789' for empties.
@@ -99,7 +103,7 @@ def eliminate(values):
     return values
 
 def only_choice(values):
-    for unit in unitsList:
+    for unit in unitlist:
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
