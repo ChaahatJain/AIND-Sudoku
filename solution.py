@@ -1,4 +1,6 @@
-
+assignments = []
+rows = 'ABCDEFGHI'
+cols = '123456789'
 def assign_value(values, box, value):
     """
     Please use this function to update your values dictionary!
@@ -23,43 +25,32 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
+    for unit in units:
+        twoValue = [box for box in unit if len(values[box]) == 2]
+        twins = [(box1,box2) for box1 in twoValue for box2 in twoValue if values[box1] == values[box2]]
+        for (box1,box2) in twins:
+            peer1 = peers[box1]
+            peer2 = peers[box2]
+            commonPeers = [peer for peer in peer1 if peer in peer2]
+            commValues = values[box1]
+            for peer in commonPeers:
+                values[peer] = values[peer].replace(commValues, '')
+                return (values)
 
-    twins      = len([box for box in values.keys() if len(values[box]) == 2])
-    nakedtwins = [[box1, box2] for box1 in twins \
-                  for box2 in peers[box1] \
-                  if set(values[box1]) == set(values[box2])]
-    for i in range(len(naked_twins)):
-        box1 = naked_twins[i][0]
-        box2 = naked_twins[i][1]
-        peers1 = set(peers[box1])
-        peers2 = set(peers[box2])
-        peersBoth = peers1 & peers2
-        digit = values[box1]
-    for peer in peersBoth:
-        values[peer] = values[peer].replace(digit, '')
-        return values
-assignments = []
-def cross(a, b):
+def cross(A, B):
     "Cross product of elements in A and elements in B."
-    return [s+t for s in a for t in b]
+    return [s + t for s in A for t in B]
 
-rows = 'ABCDEFGHI'
-cols = '123456789'
-cols_rev = list(reversed(cols))
 boxes = cross(rows, cols)
 
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-d1_units = [[rows[i]+cols[i] for i in range(len(rows))]]
-d2_units = [[rows[i]+cols_rev[i] for i in range(len(rows))]]
-
-
-unitlist = row_units + column_units + square_units + d1_units + d2_units
-
-
+diagonal_units = [[m + n for m, n in zip(rows, cols)]]
+otherDiagonal_units = [[m + n for m,n in zip(rows, reversed(cols))]]
+unitlist = row_units + column_units + square_units + diagonal_units + otherDiagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+peers = dict((s, set(sum(units[s], []))-set([s])) for s in boxes)
 def grid_values(grid):
     """
     Convert grid into a dict of {square: char} with '123456789' for empties.
